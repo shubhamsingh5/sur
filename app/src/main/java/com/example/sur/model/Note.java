@@ -1,4 +1,4 @@
-package com.example.sur;
+package com.example.sur.model;
 
 public class Note {
 

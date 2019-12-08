@@ -1,5 +1,9 @@
 package com.example.sur;
 
+import com.example.sur.model.Note;
+import com.example.sur.model.Page;
+import com.example.sur.model.Score;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -12,6 +16,8 @@ import java.util.List;
 public class XMLPullParserHandler {
     private List<Note> notes = new ArrayList<>();
     private Note note;
+    private Score score;
+    private Page page;
     private String text;
 
     public List<Note> getNotes() {
@@ -27,13 +33,24 @@ public class XMLPullParserHandler {
             parser.setInput(is, null);
 
             int eventType = parser.getEventType();
+            score = new Score();
+            page = new Page();
+            score.addPage(page);
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 String tagname = parser.getName();
                 switch (eventType) {
                     case XmlPullParser.START_TAG:
                         if (tagname.equalsIgnoreCase("note")) {
-                            // create a new instance of employee
                             note = new Note();
+                            page.addNote(note);
+                        }
+                        if (tagname.equalsIgnoreCase("print")) {
+                            // check if printing new page
+                            String isPage = parser.getAttributeValue(null, "new-page");
+                            if (isPage != null && isPage.equals("yes")) {
+                                page = new Page();
+                                score.addPage(page);
+                            }
                         }
                         break;
 
@@ -42,7 +59,6 @@ public class XMLPullParserHandler {
                         break;
                     case XmlPullParser.END_TAG:
                         if (tagname.equalsIgnoreCase("note")) {
-                            // add employee object to list
                             notes.add(note);
                         } else if (tagname.equalsIgnoreCase("step")) {
                             note.setStep(text);
