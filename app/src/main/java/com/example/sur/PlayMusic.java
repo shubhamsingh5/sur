@@ -21,6 +21,15 @@ import com.example.sur.model.Score;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 public class PlayMusic extends AppCompatActivity {
@@ -102,22 +111,45 @@ public class PlayMusic extends AppCompatActivity {
 
                 audioRecord.startRecording();
 
+                TreeMap<Double, Integer> maxMap = new TreeMap<>();
+                ArrayList<Integer> maxArray = new ArrayList<>();
+
                 while (started) {
                     int bufferReadResult = audioRecord.read(buffer, 0,
                             blockSize);
 
                     for (int i = 0; i < blockSize && i < bufferReadResult; i++) {
                         toTransform[i] = (double) buffer[i] / 32768.0; // signed
-                    }
+                        // 16
+                    }                                       // bit
                     transformer.ft(toTransform);
                     TreeMap<Double, Integer> map = new TreeMap<>();
                     for (int i = 0; i < toTransform.length; i++) {
                         map.put(toTransform[i], i);
                     }
-                    if (map.lastKey() >= 10.0)
-                        Log.d("buckets", String.valueOf(map.lastEntry()) + " " + map.keySet().toArray()[map.size() - 2] + "=" + map.values().toArray()[map.size() - 2]);
-                    publishProgress(toTransform);
 
+                    if (Double.valueOf(1).compareTo(map.lastKey()) < 0) {
+                        maxMap.put(map.lastKey(), map.get(map.lastKey()));
+                        maxArray.add(map.get(map.lastKey()));
+                    } else {
+                        if (maxArray.size() > 2) {
+                            ArrayList<Integer> top3 = new ArrayList<>();
+                            top3.add(maxArray.get(maxArray.size() - 1));
+                            top3.add(maxArray.get(maxArray.size() - 2));
+                            top3.add(maxArray.get(maxArray.size() - 3));
+
+                            if (arrayContainsAllPossiblePosOf(top3, 33))
+                                Log.d("Notes mode array", "" + mode(maxArray));
+                        }
+
+                        maxMap.clear();
+                        maxArray.clear();
+                    }
+
+
+//                    Log.d("Note freq set", ""+map.lastEntry().toString().replace("=",": "));
+
+                    publishProgress(toTransform);
                 }
 
                 audioRecord.stop();
@@ -134,5 +166,48 @@ public class PlayMusic extends AppCompatActivity {
 
         }
 
+    }
+
+    public boolean arrayContainsAllPossiblePosOf(ArrayList<Integer> topThreePos, int exactPos) {
+        if (topThreePos.contains(exactPos - 1) || topThreePos.contains(exactPos) || topThreePos.contains(exactPos + 1) ||
+                topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains(exactPos * 2) || topThreePos.contains((exactPos + 1) * 2)) {
+            return true;
+        } else
+            return false;
+    }
+
+    public HashMap<Integer, Integer> mode(ArrayList<Integer> array) {
+        HashMap<Integer, Integer> hm = new HashMap<>();
+
+        for (int i = 0; i < array.size(); i++) {
+
+            if (hm.get(array.get(i)) != null) {
+
+                int count = hm.get(array.get(i));
+                count++;
+                hm.put(array.get(i), count);
+            } else
+                hm.put(array.get(i), 1);
+        }
+        HashMap<Integer, Integer> sortedMap = sortByValues(hm);
+        return sortedMap;
+    }
+
+    private HashMap<Integer, Integer> sortByValues(HashMap map) {
+        List list = new LinkedList(map.entrySet());
+        // Defined Custom Comparator here
+        Collections.sort(list, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                return ((Comparable) ((Map.Entry) (o1)).getValue())
+                        .compareTo(((Map.Entry) (o2)).getValue());
+            }
+        });
+
+        HashMap sortedHashMap = new LinkedHashMap();
+        for (Iterator it = list.iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            sortedHashMap.put(entry.getKey(), entry.getValue());
+        }
+        return sortedHashMap;
     }
 }
