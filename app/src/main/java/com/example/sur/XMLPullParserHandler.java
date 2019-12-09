@@ -24,7 +24,7 @@ public class XMLPullParserHandler {
         return notes;
     }
 
-    public List<Note> parse(InputStream is) {
+    public Score parse(InputStream is) {
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             factory.setNamespaceAware(true);
@@ -58,19 +58,21 @@ public class XMLPullParserHandler {
                         text = parser.getText();
                         break;
                     case XmlPullParser.END_TAG:
-                        if (tagname.equalsIgnoreCase("note")) {
+                        if (tagname.equalsIgnoreCase("rest")) {
+                            break;
+                        }
+                        else if (tagname.equalsIgnoreCase("note")) {
                             notes.add(note);
                         } else if (tagname.equalsIgnoreCase("step")) {
                             note.setStep(text);
                         } else if (tagname.equalsIgnoreCase("octave")) {
-                            note.setOctave(text);
+                            note.setOctave(Integer.valueOf(text));
                         } else if (tagname.equalsIgnoreCase("alter")) {
                             note.setAlter(text);
                         } else if (tagname.equalsIgnoreCase("accidental")) {
                             note.setAlter(text);
                         }
                         break;
-
                     default:
                         break;
                 }
@@ -83,6 +85,6 @@ public class XMLPullParserHandler {
             e.printStackTrace();
         }
 
-        return notes;
+        return score;
     }
 }
