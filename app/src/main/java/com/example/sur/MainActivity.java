@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
                 chooseFile();
             }
         });
+        setTitle("\uD834\uDD1Eur");
     }
 
     private void chooseFile() {

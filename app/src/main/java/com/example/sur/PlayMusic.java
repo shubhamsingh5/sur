@@ -1,5 +1,6 @@
 package com.example.sur;
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +23,7 @@ import com.example.sur.model.Score;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,10 +38,14 @@ import java.util.TreeMap;
 public class PlayMusic extends AppCompatActivity {
 
     private Button startPlaying;
+    private ImageView pageImage;
+    private Uri imgUri;
     private Score score;
 
     private int noteIndex;
     private int pageIndex;
+
+    private String[] imageURIs;
 
     int frequency = 8000;
     int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
@@ -54,7 +61,9 @@ public class PlayMusic extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_music);
+        setTitle("\uD834\uDD1Eur");
         startPlaying = findViewById(R.id.start_playing);
+        pageImage = findViewById(R.id.imageView);
         transformer = new RealDoubleFFT(blockSize);
         Intent intent = getIntent();
         final String uriPath = intent.getStringExtra("uri");
@@ -64,9 +73,17 @@ public class PlayMusic extends AppCompatActivity {
             public void onClick(View view) {
                 if (started) {
                     started = false;
+                    pageIndex = 0;
+                    noteIndex = 0;
                     recordTask.cancel(true);
+                    recordTask = null;
+                    startPlaying.setText("Start");
+                    finish();
                 } else {
                     parse(uriPath);
+                    setImages(uriPath);
+                    imgUri = Uri.parse(imageURIs[pageIndex]);
+                    pageImage.setImageURI(imgUri);
                     for (Page p : score.getPages()) {
                         Log.d("new", "page");
                         for (Note n : p.getNotes()) {
@@ -75,11 +92,11 @@ public class PlayMusic extends AppCompatActivity {
                     }
                     recordTask = new RecordAudio();
                     started = true;
+                    startPlaying.setText("Stop");
                     recordTask.execute(score);
                 }
             }
         });
-
 
     }
 
@@ -134,6 +151,18 @@ public class PlayMusic extends AppCompatActivity {
 //        score.addPage(page2);
     }
 
+    private void setImages(String uriPath) {
+        int numPages = score.getPages().size();
+        String main = uriPath.substring(0, uriPath.length()-9);
+        imageURIs = new String[numPages];
+        for (int i = 0; i < numPages; i++) {
+            String uri = main + "-" + i + ".png";
+//            this.getContentResolver().takePersistableUriPermission(Uri.parse(uri), Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            imageURIs[i] = uri;
+            Log.d("img path", imageURIs[i]);
+        }
+    }
+
     public class RecordAudio extends AsyncTask<Score, Void, Void> {
 
         @Override
@@ -156,7 +185,7 @@ public class PlayMusic extends AppCompatActivity {
                 ArrayList<Integer> maxArray = new ArrayList<>();
                 Page currPage;
                 while (started) {
-                    Log.d("PAGE NUMBER", String.valueOf(pageIndex));
+//                    Log.d("PAGE NUMBER", String.valueOf(pageIndex));
                     Log.d("NOTE INDEX", String.valueOf(noteIndex));
                     currPage = scores[0].getPages().get(pageIndex);
                     int bufferReadResult = audioRecord.read(buffer, 0,
@@ -197,6 +226,9 @@ public class PlayMusic extends AppCompatActivity {
                             return null;
                         }
                         pageIndex++;
+                        pageImage.postInvalidate();
+                        imgUri = Uri.parse(imageURIs[pageIndex]);
+                        publishProgress();
                         noteIndex = 0;
                     }
                 }
@@ -212,13 +244,14 @@ public class PlayMusic extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Void... values) {
             super.onProgressUpdate(values);
+            pageImage.setImageURI(imgUri);
             noteIndex++;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            Toast.makeText(getApplicationContext(), "Song completed", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Take a bow!", Toast.LENGTH_SHORT).show();
 
         }
     }
