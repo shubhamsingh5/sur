@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -35,8 +36,10 @@ public class PlayMusic extends AppCompatActivity {
 
     private Button startPlaying;
     private Score score;
-    private boolean flip;
+
     private int noteIndex;
+    private int pageIndex;
+
     int frequency = 8000;
     int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
     int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
@@ -72,10 +75,12 @@ public class PlayMusic extends AppCompatActivity {
                     }
                     recordTask = new RecordAudio();
                     started = true;
-                    recordTask.execute();
+                    recordTask.execute(score);
                 }
             }
         });
+
+
     }
 
     private void parse(String path) {
@@ -91,12 +96,48 @@ public class PlayMusic extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+//        score = new Score();
+//
+//        Page page1 = new Page();
+//        Note c4 = new Note();
+//        c4.setStep("C");
+//        c4.setOctave(4);
+//        Note f4 = new Note();
+//        f4.setStep("F");
+//        f4.setOctave(4);
+//        Note a4 = new Note();
+//        a4.setStep("A");
+//        a4.setOctave(4);
+//        Note c5 = new Note();
+//        c5.setStep("C");
+//        c5.setOctave(5);
+//        Note a3 = new Note();
+//        a3.setStep("A");
+//        a3.setOctave(3);
+//        page1.addNote(c4);
+//        page1.addNote(f4);
+//        page1.addNote(a4);
+//        page1.addNote(c5);
+//        page1.addNote(a3);
+//        score.addPage(page1);
+//
+//        Page page2 = new Page();
+//        Note c4_2= new Note();
+//        c4_2.setStep("C");
+//        c4_2.setOctave(4);
+//        Note f4_2 = new Note();
+//        f4_2.setStep("F");
+//        f4_2.setOctave(4);
+//        page2.addNote(c4_2);
+//        page2.addNote(f4_2);
+//
+//        score.addPage(page2);
     }
 
-    public class RecordAudio extends AsyncTask<ArrayList<Note>, Void, Boolean> {
+    public class RecordAudio extends AsyncTask<Score, Void, Void> {
 
         @Override
-        protected Boolean doInBackground(ArrayList<Note>... notes) {
+        protected Void doInBackground(Score...scores) {
 
             try {
                 int bufferSize = AudioRecord.getMinBufferSize(frequency,
@@ -113,8 +154,11 @@ public class PlayMusic extends AppCompatActivity {
 
                 TreeMap<Double, Integer> maxMap = new TreeMap<>();
                 ArrayList<Integer> maxArray = new ArrayList<>();
-
+                Page currPage;
                 while (started) {
+//                    Log.d("PAGE NUMBER", String.valueOf(pageIndex));
+//                    Log.d("NOTE INDEX", String.valueOf(noteIndex));
+                    currPage = scores[0].getPages().get(pageIndex);
                     int bufferReadResult = audioRecord.read(buffer, 0,
                             blockSize);
 
@@ -138,21 +182,33 @@ public class PlayMusic extends AppCompatActivity {
                             top3.add(maxArray.get(maxArray.size() - 2));
                             top3.add(maxArray.get(maxArray.size() - 3));
 
-                            if (arrayContainsAllPossiblePosOf(top3, 33))
+                            if (arrayContainsAllPossiblePosOf(top3, (int)Math.round(currPage.getNotes().get(noteIndex).getPosBucket(frequency, blockSize)))) {
+                                publishProgress();
                                 Log.d("Notes mode array", "" + mode(maxArray));
+                            }
+
                         }
+                        Log.d("MaxArray", ""+maxArray);
 
                         maxMap.clear();
                         maxArray.clear();
                     }
+                    if(noteIndex == currPage.getNotes().size()) {
+                        if (pageIndex == scores[0].getPages().size() - 1) {
+                            audioRecord.stop();
+                            return null;
+                        }
+                        pageIndex++;
+                        noteIndex = 0;
+                    }
                 }
-                audioRecord.stop();
 
             } catch (Throwable t) {
                 t.printStackTrace();
                 Log.e("AudioRecord", "Recording Failed");
             }
             //return true or false based on flipping page
+
             return null;
         }
 
@@ -163,15 +219,17 @@ public class PlayMusic extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            flip = aBoolean;
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            Toast.makeText(getApplicationContext(), "Song completed", Toast.LENGTH_LONG).show();
+
         }
     }
 
     public boolean arrayContainsAllPossiblePosOf(ArrayList<Integer> topThreePos, int exactPos) {
-        return topThreePos.contains(exactPos - 1) || topThreePos.contains(exactPos) || topThreePos.contains(exactPos + 1) ||
-                topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains(exactPos * 2) || topThreePos.contains((exactPos + 1) * 2);
+        return topThreePos.contains(exactPos) || topThreePos.contains(exactPos * 2) || 
+                topThreePos.contains(exactPos - 1) || topThreePos.contains((exactPos - 1) * 2 - 1) || topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains((exactPos - 1) * 2 + 1)||
+                topThreePos.contains(exactPos + 1) || topThreePos.contains((exactPos + 1) * 2 - 1) || topThreePos.contains((exactPos + 1) * 2) || topThreePos.contains((exactPos - 1) * 2 + 1);
     }
 
     public HashMap<Integer, Integer> mode(ArrayList<Integer> array) {
