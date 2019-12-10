@@ -14,7 +14,6 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.sur.fft.RealDoubleFFT;
-import com.example.sur.model.Frequency;
 import com.example.sur.model.Note;
 import com.example.sur.model.Page;
 import com.example.sur.model.Score;
@@ -36,12 +35,13 @@ public class PlayMusic extends AppCompatActivity {
 
     private Button startPlaying;
     private Score score;
-
+    private boolean flip;
+    private int noteIndex;
     int frequency = 8000;
     int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
     int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
     private RealDoubleFFT transformer;
-    int blockSize = 256;
+    int blockSize = 512;
 
     RecordAudio recordTask;
 
@@ -67,7 +67,7 @@ public class PlayMusic extends AppCompatActivity {
                     for (Page p : score.getPages()) {
                         Log.d("new", "page");
                         for (Note n : p.getNotes()) {
-                            Log.d("new", n.getStep() + n.getOctave() +  " " + n.getFrequency());
+                            Log.d("new", n.getStep() + n.getOctave() + " " + n.getFrequency());
                         }
                     }
                     recordTask = new RecordAudio();
@@ -93,10 +93,10 @@ public class PlayMusic extends AppCompatActivity {
         }
     }
 
-    public class RecordAudio extends AsyncTask<Void, double[], Void> {
+    public class RecordAudio extends AsyncTask<ArrayList<Note>, Void, Boolean> {
 
         @Override
-        protected Void doInBackground(Void... arg0) {
+        protected Boolean doInBackground(ArrayList<Note>... notes) {
 
             try {
                 int bufferSize = AudioRecord.getMinBufferSize(frequency,
@@ -145,35 +145,33 @@ public class PlayMusic extends AppCompatActivity {
                         maxMap.clear();
                         maxArray.clear();
                     }
-
-
-//                    Log.d("Note freq set", ""+map.lastEntry().toString().replace("=",": "));
-
-                    publishProgress(toTransform);
                 }
-
                 audioRecord.stop();
 
             } catch (Throwable t) {
                 t.printStackTrace();
                 Log.e("AudioRecord", "Recording Failed");
             }
+            //return true or false based on flipping page
             return null;
         }
 
         @Override
-        protected void onProgressUpdate(double[]... toTransform) {
-
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            noteIndex++;
         }
 
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            flip = aBoolean;
+        }
     }
 
     public boolean arrayContainsAllPossiblePosOf(ArrayList<Integer> topThreePos, int exactPos) {
-        if (topThreePos.contains(exactPos - 1) || topThreePos.contains(exactPos) || topThreePos.contains(exactPos + 1) ||
-                topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains(exactPos * 2) || topThreePos.contains((exactPos + 1) * 2)) {
-            return true;
-        } else
-            return false;
+        return topThreePos.contains(exactPos - 1) || topThreePos.contains(exactPos) || topThreePos.contains(exactPos + 1) ||
+                topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains(exactPos * 2) || topThreePos.contains((exactPos + 1) * 2);
     }
 
     public HashMap<Integer, Integer> mode(ArrayList<Integer> array) {
@@ -189,8 +187,7 @@ public class PlayMusic extends AppCompatActivity {
             } else
                 hm.put(array.get(i), 1);
         }
-        HashMap<Integer, Integer> sortedMap = sortByValues(hm);
-        return sortedMap;
+        return sortByValues(hm);
     }
 
     private HashMap<Integer, Integer> sortByValues(HashMap map) {
