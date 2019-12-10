@@ -156,8 +156,8 @@ public class PlayMusic extends AppCompatActivity {
                 ArrayList<Integer> maxArray = new ArrayList<>();
                 Page currPage;
                 while (started) {
-//                    Log.d("PAGE NUMBER", String.valueOf(pageIndex));
-//                    Log.d("NOTE INDEX", String.valueOf(noteIndex));
+                    Log.d("PAGE NUMBER", String.valueOf(pageIndex));
+                    Log.d("NOTE INDEX", String.valueOf(noteIndex));
                     currPage = scores[0].getPages().get(pageIndex);
                     int bufferReadResult = audioRecord.read(buffer, 0,
                             blockSize);
@@ -188,8 +188,6 @@ public class PlayMusic extends AppCompatActivity {
                             }
 
                         }
-                        Log.d("MaxArray", ""+maxArray);
-
                         maxMap.clear();
                         maxArray.clear();
                     }
@@ -207,7 +205,6 @@ public class PlayMusic extends AppCompatActivity {
                 t.printStackTrace();
                 Log.e("AudioRecord", "Recording Failed");
             }
-            //return true or false based on flipping page
 
             return null;
         }
@@ -227,9 +224,9 @@ public class PlayMusic extends AppCompatActivity {
     }
 
     public boolean arrayContainsAllPossiblePosOf(ArrayList<Integer> topThreePos, int exactPos) {
-        return topThreePos.contains(exactPos) || topThreePos.contains(exactPos * 2) || 
+        return topThreePos.contains(exactPos) || topThreePos.contains(exactPos * 2) ||
                 topThreePos.contains(exactPos - 1) || topThreePos.contains((exactPos - 1) * 2 - 1) || topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains((exactPos - 1) * 2 + 1)||
-                topThreePos.contains(exactPos + 1) || topThreePos.contains((exactPos + 1) * 2 - 1) || topThreePos.contains((exactPos + 1) * 2) || topThreePos.contains((exactPos - 1) * 2 + 1);
+                topThreePos.contains(exactPos + 1) || topThreePos.contains((exactPos + 1) * 2 - 1) || topThreePos.contains((exactPos + 1) * 2) || topThreePos.contains((exactPos + 1) * 2 + 1);
     }
 
     public HashMap<Integer, Integer> mode(ArrayList<Integer> array) {
