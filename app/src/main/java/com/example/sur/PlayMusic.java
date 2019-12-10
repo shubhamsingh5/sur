@@ -137,7 +137,7 @@ public class PlayMusic extends AppCompatActivity {
     public class RecordAudio extends AsyncTask<Score, Void, Void> {
 
         @Override
-        protected Void doInBackground(Score...scores) {
+        protected Void doInBackground(Score... scores) {
 
             try {
                 int bufferSize = AudioRecord.getMinBufferSize(frequency,
@@ -182,7 +182,7 @@ public class PlayMusic extends AppCompatActivity {
                             top3.add(maxArray.get(maxArray.size() - 2));
                             top3.add(maxArray.get(maxArray.size() - 3));
 
-                            if (arrayContainsAllPossiblePosOf(top3, (int)Math.round(currPage.getNotes().get(noteIndex).getPosBucket(frequency, blockSize)))) {
+                            if (arrayContainsAllPossiblePosOf(top3, (int) Math.round(currPage.getNotes().get(noteIndex).getPosBucket(frequency, blockSize)))) {
                                 publishProgress();
                                 Log.d("Notes mode array", "" + mode(maxArray));
                             }
@@ -191,7 +191,7 @@ public class PlayMusic extends AppCompatActivity {
                         maxMap.clear();
                         maxArray.clear();
                     }
-                    if(noteIndex == currPage.getNotes().size()) {
+                    if (noteIndex == currPage.getNotes().size()) {
                         if (pageIndex == scores[0].getPages().size() - 1) {
                             audioRecord.stop();
                             return null;
@@ -225,7 +225,7 @@ public class PlayMusic extends AppCompatActivity {
 
     public boolean arrayContainsAllPossiblePosOf(ArrayList<Integer> topThreePos, int exactPos) {
         return topThreePos.contains(exactPos) || topThreePos.contains(exactPos * 2) ||
-                topThreePos.contains(exactPos - 1) || topThreePos.contains((exactPos - 1) * 2 - 1) || topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains((exactPos - 1) * 2 + 1)||
+                topThreePos.contains(exactPos - 1) || topThreePos.contains((exactPos - 1) * 2 - 1) || topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains((exactPos - 1) * 2 + 1) ||
                 topThreePos.contains(exactPos + 1) || topThreePos.contains((exactPos + 1) * 2 - 1) || topThreePos.contains((exactPos + 1) * 2) || topThreePos.contains((exactPos + 1) * 2 + 1);
     }
 
