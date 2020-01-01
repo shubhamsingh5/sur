@@ -1,6 +1,5 @@
 package com.example.sur;
 
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -23,7 +22,6 @@ import com.example.sur.model.Score;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -153,7 +151,7 @@ public class PlayMusic extends AppCompatActivity {
 
     private void setImages(String uriPath) {
         int numPages = score.getPages().size();
-        String main = uriPath.substring(0, uriPath.length()-9);
+        String main = uriPath.substring(0, uriPath.length() - 9);
         imageURIs = new String[numPages];
         for (int i = 0; i < numPages; i++) {
             String uri = main + "-" + i + ".png";
@@ -261,6 +259,28 @@ public class PlayMusic extends AppCompatActivity {
                 topThreePos.contains(exactPos - 1) || topThreePos.contains((exactPos - 1) * 2 - 1) || topThreePos.contains((exactPos - 1) * 2) || topThreePos.contains((exactPos - 1) * 2 + 1) ||
                 topThreePos.contains(exactPos + 1) || topThreePos.contains((exactPos + 1) * 2 - 1) || topThreePos.contains((exactPos + 1) * 2) || topThreePos.contains((exactPos + 1) * 2 + 1);
     }
+
+    public static List<Integer> rearrange(List<Integer> elements) {
+        // Write your code here
+        Collections.sort(elements, new Comparator<Integer>() {
+            public int compare(Integer num1, Integer num2) {
+                if (num1.equals(num2)) {
+                    return 0;
+                } else
+                    return Integer.compare(Integer.bitCount(num1), Integer.bitCount(num2));
+                if (Integer.bitCount(num1) < Integer.bitCount(num2)) {
+                    return -1;
+                } else if (Integer.bitCount(num1) > Integer.bitCount(num2)) {
+                    return 1;
+                } else if (Integer.bitCount(num1) == Integer.bitCount(num2)) {
+                    return (num1 < num2) ? -1 : 1;
+                }
+                return 0;
+            }
+        });
+        return elements;
+    }
+
 
     public HashMap<Integer, Integer> mode(ArrayList<Integer> array) {
         HashMap<Integer, Integer> hm = new HashMap<>();
